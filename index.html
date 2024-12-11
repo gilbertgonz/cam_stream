@@ -2,12 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Streaming</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name = "color-scheme" content = "dark">
+    <title>CV options</title>
+
+    <!-- Styling -->
+    <style>
+      pre code {
+        background-color: #131327;
+        border: 1px solid #5f5f5f;
+        display: block;
+        padding: 5px;
+      }
+    </style>
 </head>
+
 <body>
-  <h1>Stream</h1>
-    <video id="video" autoplay playsinline></video>
+    <h1>CV options</h1>
+
+    <!-- Upload form -->
+    <form id="fileUploadForm" enctype="multipart/form-data">
+        File: <input type="file" name="upload" />
+        <input type="submit" />
+    </form>
+
+    <br>
+
+    <!-- CV options -->
+    <label for="options">Choose an option:</label>
+    <select name="options" id="options">
+      <option value="select">Select</option>
+      <option value="calibrate">Camera calibration</option>
+      <option value="face">Face detection</option>
+      <option value="scan">3D scan</option>
+    </select> 
+
+    <br>
+
+    <!-- 3D scan parameters -->
+    <div id="scanParams" style="display: none;">
+      <label for="fx">fx:</label>
+      <input type="number" id="fx" name="fx"><br>
+      <label for="fy">fy:</label>
+      <input type="number" id="fy" name="fy"><br>
+      <label for="cx">cx:</label>
+      <input type="number" id="cx" name="cx"><br>
+      <label for="cy">cy:</label>
+      <input type="number" id="cy" name="cy"><br>
+    </div>
+
+    <br>
+
+    <!-- Loading -->
+    <div id="loading" style="display: none;">Loading...</div>
+
+    <br>
+
+    <!-- Output -->
+    <pre>
+      <code id="output">
+Choose an <b>option</b> above ⇧⇧⇧
+
+<u>Camera Calibration:</u> Correct lens distortions and obtain camera parameters.
+
+<u>Face Detection:</u> Detect faces in images or videos.
+
+<u>3D Scan:</u> Create 3D models from images/video of a scene (requires camera parameters)
+      </code>
+    </pre>
+
+    <!-- JS -->
     <script src="app.js"></script>
+
 </body>
 </html>

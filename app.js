@@ -1,48 +1,59 @@
-let mediaStream;
-const socket = io('http://127.0.0.1:5000');
+const optionsSelect = document.getElementById('options');
 
-async function startMedia() {
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-        });
-        const videoElement = document.getElementById('video');
-        videoElement.srcObject = mediaStream;
-        // Start streaming frames
-        streamFrames(videoElement);
-    } catch (error) {
-        console.error('Error accessing media devices.', error);
+optionsSelect.addEventListener("change", () => {
+    const scanParams = document.getElementById("scanParams");
+    if (optionsSelect.value === "scan") {
+        scanParams.style.display = "block";
+    } else {
+        scanParams.style.display = "none";
     }
-}
+});
 
-function streamFrames(videoElement) {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+const form = document.getElementById("fileUploadForm");
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
     
-    // Set canvas size to a reasonable resolution to reduce data transfer
-    canvas.width = 640; //videoElement.videoWidth;
-    canvas.height = 480; //videoElement.videoHeight;
+    output = optionsSelect.value;
+    console.log("option: " + output);
 
-    function captureFrame() {
-        // Draw the video frame onto the canvas with scaled size
-        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    if (output == 'select') {
+        alert("Select an option");
+    } else {
+        // Loading
+        const loadingIndicator = document.getElementById("loading");
+        loadingIndicator.style.display = 'block';
+
+        // Send data to backened
+        let response = await fetch("http://0.0.0.0:5000/upload", {
+            method: "POST",
+            body: data,
+        });
+
+        // Result
+        let result = await response.json();
+
+        // Output data
+        const codeBlock = document.getElementById('output');
+        if (output == 'calibrate') { // calibration
+            if (result.matrix) {
+                // Format the camera matrix
+                let matrixString = "Camera matrix:\n";
+                matrixString += result.matrix.map(row => row.join('\t')).join('\n');
+
+                // Format the reprojection error
+                let reprojString = "\n\nReprojection error:\n" + result.reproj_error.toFixed(4);
+
+                // Combine both strings
+                codeBlock.textContent = matrixString + reprojString;
+            }
+        }
         
-        // Compress to JPEG with lower quality to reduce size
-        const frameData = canvas.toDataURL('image/jpeg', 0.5);
-        
-        // Send the frame to the server
-        socket.emit('frame', frameData);
-        
-        // Continue capturing frames
-        requestAnimationFrame(captureFrame);
+        // Alert user of finished process
+        console.log(result);
+        alert(result.message);
+
+        // Remove loading
+        loadingIndicator.style.display = 'none';        
     }
-
-    // Start capturing frames when video is ready
-    videoElement.addEventListener('loadedmetadata', () => {
-        captureFrame();
-    });
-}
-
-// Ensure the function is called when page loads
-window.onload = startMedia;
+});
