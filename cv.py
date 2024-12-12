@@ -1,5 +1,9 @@
+import base64
 import cv2
 import numpy as np
+from flask import Flask, request, jsonify, send_from_directory, Response
+from flask_cors import CORS
+import os
 
 ## TODO: 
 # simple face detection
@@ -62,4 +66,40 @@ def calibrate(video_path):
 
     return mtx, reproj_error
 
-    
+def face_detect(video_path):
+    '''
+    reference: https://www.geeksforgeeks.org/opencv-python-program-face-detection/
+    '''
+    face_cascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
+
+    cap = cv2.VideoCapture(video_path)
+    while cap.isOpened():
+        ret, img = cap.read()
+        if not ret:
+            break
+
+        # convert to gray scale of each frames
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Detects faces of different sizes in the input image
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        for (x,y,w,h) in faces:
+            # To draw a rectangle in a face 
+            cv2.rectangle(img,(x,y),(x+w,y+h),(255,255,0),2) 
+
+        # send image to frontend
+        send_images(img)
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+@app.route('/stream_images')
+def send_images(img):
+    """
+    convert image to base64 for sending to frontend
+    """
+    _, buffer = cv2.imencode('.jpg', img)
+    img_base64 = base64.b64encode(buffer).decode('utf-8')
+
+    return jsonify(img_base64), 200  
